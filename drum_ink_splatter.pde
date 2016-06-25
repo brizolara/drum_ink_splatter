@@ -1,8 +1,11 @@
 //import java.util.*;//import java.util.LinkedList;
+
+//  BEGIN Processing Java specific 
 import oscP5.*;
 import netP5.*;
 OscP5 oscP5; 
 NetAddress myRemoteLocation;
+//  END Processing Java specific
 
 ArrayList<Blob> blobs_pool;
 BlobFactory blobFactory;
@@ -21,13 +24,16 @@ SplatterSource splatterSnareSource;
 SplatterSource splatterCrashSource;
 SplatterSource splatterTonSource;
 
+float trajectories_scale;
+
 float lastMillis;
 
 void setup()
 {  
-  size(960, 720);
+  size(640,480);
+  trajectories_scale = width/690.;
   
-  /**** JAVA 
+  //  BEGIN Processing Java specific 
   // start oscP5, listening for incoming messages at port 12000 
   oscP5 = new OscP5(this,12000);
   
@@ -54,12 +60,13 @@ void setup()
   oscP5.plug(this, "crash", "/crash");
   //  E idem para um ton (ou seja lá o que for)
   oscP5.plug(this, "ton", "/ton");
-  END JAVA*/
+  //  END Processing Java specific
   
   //splatters = new LinkedList<Splatter>();//splatters = new SplatterPool(200);
   splatters = new ArrayList<Splatter>();
   
-  /*blobs_pool = new ArrayList();
+  /*  testing different blobs styles
+  blobs_pool = new ArrayList();
   
   blobFactory = new BlobFactory();
   
@@ -69,16 +76,16 @@ void setup()
   blobs_pool.add(blobFactory.createBlob4(width-60,height-60));*/
   
   splatterSourceFactory = new SplatterSourceFactory(); 
-  splatterSnareSource   = splatterSourceFactory.createSplatterSource_snareDefault(new PVector(width/2.,height/2.));
-  splatterCrashSource   = splatterSourceFactory.createSplatterSource_crashDefault();
-  splatterTonSource     = splatterSourceFactory.createSplatterSource_tonDefault(new PVector(0.75*width,height/2.), new PVector(width/4./60.,height/5./60.));
+  splatterSnareSource   = splatterSourceFactory.createSplatterSource_snareDefault(trajectories_scale);
+  splatterCrashSource   = splatterSourceFactory.createSplatterSource_crashDefault(trajectories_scale);
+  splatterTonSource     = splatterSourceFactory.createSplatterSource_tonDefault();
   
   //frameRate(60);
 }
 
 //
 //  These are the functions that will be called by Processing when received osc message accordingly
-//  NOTE - we are not using a_param
+//  NOTE - we are not really using a_param
 //---------
 void crash(int a_param) {
   if(a_param == 1)
@@ -145,16 +152,14 @@ void draw() {
     createSplatterTon = false;
   }
   
-  //  If blob gets ejected, rest its trajectory
-  if(       splatterCrashSource.trajectory.position.x > width  || splatterCrashSource.trajectory.position.x < 0)
-  {
-    splatterCrashSource.trajectory.reset();
-  } else if(splatterCrashSource.trajectory.position.y > height || splatterCrashSource.trajectory.position.y < 0)
+  //  If blob gets ejected, reset its trajectory
+  if(  (splatterCrashSource.blob.center.x > width  || splatterCrashSource.blob.center.x < 0)
+    || (splatterCrashSource.blob.center.y > height || splatterCrashSource.blob.center.y < 0))
   {
     splatterCrashSource.trajectory.reset();
   }
   
-  for(Splatter s: splatters) {
+  for(Splatter s: splatters) {  
     s.display(); 
   }
   /*if(splatters.getActualFirst_index() >= 0)
@@ -215,11 +220,12 @@ void draw() {
 }
 
 void keyPressed()
-{
+{ 
+  //  In addition to create splatters when receiving OSC messages,
+  //we can create by pressing a, s or d...
+  
   if (key == 'a')
   {
-    println(key);
-    
     //frameCounter = 0;
     
     /*blobs_pool.set(0, blobFactory.createBlob1(60,60));

@@ -1,4 +1,5 @@
 //  A specific fixed-size array of Splatters.
+//  NOTE - not being used
 public class SplatterPool
 {
   Splatter [] members;

@@ -1,6 +1,8 @@
-//
-//  Sources of splatters have their trajectories
-//
+//  Trajectory class
+//  SplatterSource class - a Blob that obbeys a Trajectory
+//  SplatterSourceFactory class
+
+
 public class Trajectory
 {
   PVector position;
@@ -93,13 +95,14 @@ public class TrajectoryLorenz extends Trajectory
   PVector center;
   float x, y, z;
   
-  /*double*/float x0,y0,z0,x1,y1,z1;
-  /*double*/float h = 0.01;
-  /*double*/float a = 10.0;
-  /*double*/float b = 28.0;
-  /*double*/float c = 8.0 / 3.0;
+  //  why not double?
+  float x0,y0,z0,x1,y1,z1;
+  float h = 0.01;
+  float a = 10.0;
+  float b = 28.0;
+  float c = 8.0 / 3.0;
   
-  TrajectoryLorenz(float aStartX, float aStartY, float aStartZ, PVector aCenter)
+  TrajectoryLorenz(float aStartX, float aStartY, float aStartZ, PVector aCenter, float a_scale)
   {
     position = new PVector(aStartX + width/2., aStartY + height/2.);
     x = aStartX;
@@ -107,11 +110,11 @@ public class TrajectoryLorenz extends Trajectory
     z = aStartZ;
     center = aCenter;
     
-    scale = 10.;//2.3;
-    offset = new PVector(width/6. + aCenter.x, 0. + aCenter.y);
+    scale = 10.*a_scale;
+    offset = new PVector( aCenter.x, aCenter.y );
   }
  
-  PVector update()
+ PVector update()
   {
     /*x0 = 0.1;
     y0 = 0;
@@ -146,7 +149,7 @@ public class Trajectory3BodyGravityChaos extends Trajectory
   PVector aux1, aux2;
   PVector initPosition, initVelocity;
   
-  Trajectory3BodyGravityChaos(PVector aPosition, PVector aVelocity, PVector aPosPlanet1, PVector aPosPlanet2)
+  Trajectory3BodyGravityChaos(PVector aCenter, PVector aPosition, PVector aVelocity, PVector aPosPlanet1, PVector aPosPlanet2, float a_scale)
   {
     m  = 0.1; 
     m1 = 1080000;
@@ -170,8 +173,10 @@ public class Trajectory3BodyGravityChaos extends Trajectory
     println(aPosPlanet1);
     println(aPosPlanet2);
     
-    scale = 2.5;
-    offset = new PVector(-350., -200);
+    scale = 2.5*a_scale;
+    
+    offset = new PVector( aCenter.x, aCenter.y );
+    //offset = new PVector(-350., -200);
     
     prevTime = millis();
   }
@@ -251,14 +256,6 @@ public class Trajectory3BodyGravityChaos extends Trajectory
       
       position.add(aux2);
       
-      //  And repositioning the sprites
-      /*bitmapSpaceship.x = ship.position.x      - bitmapSpaceship.width/2.;
-      bitmapSpaceship.y = ship.position.y      - bitmapSpaceship.height/2.;
-      bitmapVulcano.x   = vulcano.position.x   - bitmapVulcano.width/2.;
-      bitmapVulcano.y   = vulcano.position.y   - bitmapVulcano.height/2.;
-      bitmapPasargada.x = pasargada.position.x - bitmapPasargada.width/2.;
-      bitmapPasargada.y = pasargada.position.y - bitmapPasargada.height/2.;*/
-      
       //if(d_squared < 25)
       //  keepEnergy();
     } 
@@ -270,19 +267,19 @@ public class Trajectory3BodyGravityChaos extends Trajectory
 //----------------------------------------
 class SplatterSourceFactory
 {
-  SplatterSource createSplatterSource_snareDefault(PVector a_position)
+  SplatterSource createSplatterSource_snareDefault(float a_scale)
   {
-    return new SplatterSource_Snare(a_position, color(0, 255, 0));
+    return new SplatterSource_Snare(new PVector(width/2.f, height/2.f), new PVector(width/2.f + width/6.f, height/2.f), color(0, 255, 0), a_scale);
   }
   
-  SplatterSource createSplatterSource_crashDefault(/*PVector a_position*/)
+  SplatterSource createSplatterSource_crashDefault(float a_scale)
   {
-    return new SplatterSource_Crash(/*a_position, */color(255, 0, 0));
+    return new SplatterSource_Crash(new PVector(width/2.f, height/2.f), color(255, 0, 0), a_scale);
   }
   
-  SplatterSource createSplatterSource_tonDefault(PVector a_position, PVector a_speed)
+  SplatterSource createSplatterSource_tonDefault()
   {
-    return new SplatterSource_Ton(a_position, a_speed, color(0, 0, 255)); 
+    return new SplatterSource_Ton(new PVector(0.75*width,height/2.), new PVector(width/4./60.,height/5./60.), color(0, 0, 255)); 
   }
 }
 
@@ -325,20 +322,32 @@ public class SplatterSource_Snare extends SplatterSource
   SplatterSource_Snare() {
   }
   
-  SplatterSource_Snare(PVector a_position, color a_color)
+  SplatterSource_Snare(PVector a_position, PVector a_trajectoryCenter, color a_color, float a_scale)
   {
     blob = blobFactory.createBlob2(a_position, /*radius*/12., a_color); 
-    trajectory = new TrajectoryLorenz(0.1, 0., 0., new PVector(a_position.x, a_position.y));
+    trajectory = new TrajectoryLorenz(0.1, 0., 0., a_trajectoryCenter, a_scale);
   }
 }
 
+//  A ideia para escalar um sistema gravitacional eh a seguinte... deixe com os numeros 
+//que funcionam.
+//  Escale apenas a posicao a cada frame, nao mexa em velocidade nem massa nem posicao dos
+//dois corpos massivos
 public class SplatterSource_Crash extends SplatterSource
 {
-  SplatterSource_Crash(/*PVector a_position, */color a_color)
+  SplatterSource_Crash(PVector a_center, color a_color, float a_scale)
   {
-    blob = blobFactory.createBlob2(new PVector(300., 280.), /*radius*/12., a_color); 
+    //  fiz offset de -300, -200. Meio caminho entre os dois corpos massivos esta em (0.,0.)
+    
+    //  note: this position of the blob is overwritten by the trajectory, that updates it every frame...
+    blob = blobFactory.createBlob2(new PVector(0., 180.), /*radius*/12., a_color); 
+        
     trajectory = new Trajectory3BodyGravityChaos(
-      new PVector(300., 280.),new PVector(8., 10.), new PVector(200., 200.), new PVector(400., 200.));
+      a_center,
+      new PVector(0., 80.),
+      new PVector(8., 10.),
+      new PVector(-100., 0.),
+      new PVector(100., 0.), a_scale);
   }
 }
 

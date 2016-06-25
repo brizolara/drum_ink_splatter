@@ -1,3 +1,5 @@
+//  BlobFactory, Blob, Splatter classes
+
 class BlobFactory
 {  
   Blob createBlob1(PVector aCenter, float a_radius, color a_color) {
@@ -223,7 +225,7 @@ public class Splatter {
   float eccentricity;  //  radius in y is eccentricity * radius
   
   //  Points. They are relative to the center and haven't the rotation applied 
-  FloatList x, y;
+  ArrayList<Float> x, y;//FloatList x, y;  FloatList not supported on Processing.js by now...
   //  Type of the point or points to draw. p stands for (poly)line, b for Bezier  
   //ArrayList<char>  t;
   
@@ -284,9 +286,9 @@ public class Splatter {
     
     println("[]");
     
-    x = new FloatList();
+    x = new ArrayList<Float>();//FloatList not supported on Processing.js by now...
     println("[][]");
-    y = new FloatList();
+    y = new ArrayList<Float>();//
     
     println("-");
     
@@ -298,9 +300,9 @@ public class Splatter {
     radius = radFactor * sqrt(1./
       (cos(angle)*cos(angle)/(rad*rad) + sin(angle)*sin(angle)/(rad*eccentricity*rad*eccentricity)));
       
-    x.append(radius * cos(angle));
+    x.add(radius * cos(angle));
     println("---");
-    y.append(radius * sin(angle));
+    y.add(radius * sin(angle));
     println("----");
     for(angle = angularStep; angle < 2*PI; angle += angularStep)
     {
@@ -318,14 +320,14 @@ public class Splatter {
           (cos(angCenter)*cos(angCenter)/(rad*rad) + sin(angCenter)*sin(angCenter)/(rad*eccentricity*rad*eccentricity)));
         armSize = radius*random(averageArmsRelativeSize*0.8, averageArmsRelativeSize*1.2);
         //  control point
-        x.append(armSize * cos(angle+0.8*armAngSpread));
-        y.append(armSize * sin(angle+0.8*armAngSpread));
+        x.add(armSize * cos(angle+0.8*armAngSpread));
+        y.add(armSize * sin(angle+0.8*armAngSpread));
         //  control point
-        x.append(armSize * cos(angle+0.2*armAngSpread));
-        y.append(armSize * sin(angle+0.2*armAngSpread));
+        x.add(armSize * cos(angle+0.2*armAngSpread));
+        y.add(armSize * sin(angle+0.2*armAngSpread));
         //  anchor point
-        x.append(radius * cos(angle+armAngSpread));
-        y.append(radius * sin(angle+armAngSpread));
+        x.add(radius * cos(angle+armAngSpread));
+        y.add(radius * sin(angle+armAngSpread));
         
         angle += (armAngSpread - angularStep);
       }
@@ -335,16 +337,16 @@ public class Splatter {
         radius = radFactor * sqrt(1./
           (cos(angle)*cos(angle)/(rad*rad) + sin(angle)*sin(angle)/(rad*eccentricity*rad*eccentricity)));
         //  control point
-        x.append(radius * cos(angle));
-        y.append(radius * sin(angle));
+        x.add(radius * cos(angle));
+        y.add(radius * sin(angle));
         //  control point
         //xy.add( new Point2d(x.get(x.size()-1),
         //  y.get(y.size()-1)) );
-        x.append(radius * cos(angle));
-        y.append(radius * sin(angle));
+        x.add(radius * cos(angle));
+        y.add(radius * sin(angle));
         //  anchor point
-        x.append(radius * cos(angle));
-        y.append(radius * sin(angle));
+        x.add(radius * cos(angle));
+        y.add(radius * sin(angle));
       }
     }
   }
